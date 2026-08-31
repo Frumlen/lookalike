@@ -1,0 +1,14 @@
+# Данные и результаты — в репозиторий не кладём
+photos/*
+!photos/README.md
+index.npz
+
+# Окружение
+.venv/
+__pycache__/
+*.pyc
+
+# Системное
+.DS_Store
+.venv
+.idea/

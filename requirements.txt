@@ -1,0 +1,6 @@
+# Для Python x86_64 на macOS торч остановился на 2.2.2, поэтому версии закреплены.
+# На Apple Silicon и Linux ограничения можно снять: torch, transformers, numpy, Pillow.
+torch==2.2.2
+transformers==4.46.3
+numpy<2
+Pillow>=10
