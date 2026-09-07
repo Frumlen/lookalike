@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.Lookalike" parent="Theme.MaterialComponents.Light.NoActionBar" />
+</resources>

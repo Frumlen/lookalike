@@ -1,0 +1,15 @@
+# Всё это собирается скриптами из export/ и весит десятки мегабайт.
+# Каждый готовит у себя: см. android/README.md
+export/*.onnx
+export/*.npy
+app/src/main/assets/*.onnx
+app/src/main/assets/index.bin
+app/src/main/assets/index.json
+app/src/main/assets/thumbs/
+
+# Сборка
+build/
+app/build/
+.gradle/
+local.properties
+*.apk

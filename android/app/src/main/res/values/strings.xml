@@ -1,0 +1,56 @@
+<resources>
+    <string name="app_name">lookalike</string>
+
+    <string name="shoot">Распознать</string>
+    <string name="take_shot">Снять</string>
+    <string name="done">Готово</string>
+    <string name="cancel">Отмена</string>
+    <string name="save">Сохранить</string>
+    <string name="start">Начать</string>
+
+    <string name="loading">Загружаю модель…</string>
+    <string name="ready">Готово: %1$d снимков в базе, модель поднялась за %2$d мс</string>
+    <string name="thinking">Считаю…</string>
+    <string name="took">Ответ за %1$d мс</string>
+    <string name="no_frame">Кадр не получен</string>
+    <string name="no_camera">Нет доступа к камере</string>
+    <string name="percent">%1$.1f %%</string>
+    <string name="shots_total">В базе %1$d снимков, товаров %2$d</string>
+
+    <string name="new_product">Новый товар</string>
+    <string name="catalog">Товары</string>
+    <string name="product_hint">Название товара</string>
+    <string name="adding">Добавляю «%1$s»: снято %2$d</string>
+    <string name="added">«%1$s» добавлен, снимков: %2$d</string>
+
+    <string name="teach_question">Запомнить этот кадр как ещё один снимок товара? Дальше он будет узнаваться увереннее.</string>
+    <string name="teach_yes">Запомнить</string>
+    <string name="taught">Кадр добавлен к «%1$s»</string>
+
+    <string name="catalog_summary">Товаров: %1$d, снимков: %2$d</string>
+    <string name="rename">Переименовать</string>
+    <string name="delete">Удалить</string>
+    <string name="delete_question">Удалить товар вместе со всеми снимками (%1$d)?</string>
+    <string name="export">Поделиться базой</string>
+    <string name="packing">Собираю файл…</string>
+    <string name="import_base">Загрузить базу</string>
+    <string name="import_do">Загрузить</string>
+    <string name="import_question">Текущая база будет заменена целиком. Продолжить?</string>
+    <string name="import_done">База загружена</string>
+    <string name="import_failed">Не удалось загрузить</string>
+
+    <plurals name="shots">
+        <item quantity="one">%d снимок</item>
+        <item quantity="few">%d снимка</item>
+        <item quantity="many">%d снимков</item>
+        <item quantity="other">%d снимков</item>
+    </plurals>
+
+    <string name="tap_to_delete">Нажмите на снимок, чтобы убрать его из базы. Неудачные кадры тянут распознавание к себе.</string>
+    <string name="delete_shot">Убрать снимок</string>
+    <string name="delete_shot_question">Удалить этот кадр из базы товара?</string>
+    <string name="rename_hint">Это название показывается после распознавания.</string>
+    <string name="no_thumb">без\nкартинки</string>
+    <string name="shot_desc">Эталонный снимок</string>
+    <string name="hold_for_menu">Удерживайте товар для удаления</string>
+</resources>

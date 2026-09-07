@@ -22,7 +22,7 @@ from transformers import AutoImageProcessor, AutoModel
 BASE = Path(__file__).parent
 PHOTOS = BASE / os.getenv('PHOTOS_DIR', 'photos')
 INDEX = BASE / os.getenv('INDEX_FILE', 'index.npz')
-MODEL_NAME = os.getenv('MODEL_NAME', 'facebook/dinov2-base')          # 86M параметров, вектор 768
+MODEL_NAME = os.getenv('MODEL_NAME', 'facebook/dinov2-small')          # 86M параметров, вектор 768
 EXTS = {'.jpg', '.jpeg', '.png', '.webp', '.bmp'}
 MIN_SIDE = 32          # кадры мельче отбрасываются: процессор принимает их за одноканальные
 
@@ -75,7 +75,7 @@ def embed_paths(paths, batch_size=8):
             kept.extend(good)
         print(f'  {min(start + batch_size, len(paths))}/{len(paths)}', end='\r', flush=True)
     print(' ' * 30, end='\r')
-    return (np.vstack(vectors) if vectors else np.empty((0, 768), 'float32')), kept
+    return (np.vstack(vectors) if vectors else np.empty((0, 384), 'float32')), kept
 
 
 def file_key(path):
