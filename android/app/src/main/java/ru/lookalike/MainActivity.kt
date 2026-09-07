@@ -21,6 +21,11 @@ import ru.lookalike.databinding.ActivityMainBinding
 import java.util.concurrent.Executors
 import kotlin.system.measureTimeMillis
 
+/**
+ * Рабочий экран. Здесь делается всё, ради чего приложение существует:
+ * распознать товар, взять вес с весов и держать оба значения наготове
+ * для 1С. Остальные экраны — настройка и обслуживание.
+ */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var ui: ActivityMainBinding
@@ -28,8 +33,9 @@ class MainActivity : AppCompatActivity() {
 
     private var encoder: Encoder? = null
     private var store: IndexStore? = null
+    private val scaleSettings by lazy { ScaleSettings(this) }
 
-    /** Вектор последнего распознанного кадра — чтобы можно было приписать его к товару. */
+    /** Кадр и его вектор — чтобы можно было приписать снимок к товару. */
     private var lastEmbedding: FloatArray? = null
     private var lastFrame: Bitmap? = null
 
@@ -48,14 +54,15 @@ class MainActivity : AppCompatActivity() {
 
         ui.status.text = getString(R.string.loading)
         ui.shoot.isEnabled = false
+        ui.getWeight.isEnabled = false
+
         ui.shoot.setOnClickListener { if (addingTo != null) captureForProduct() else recognize() }
-        ui.newProduct.setOnClickListener { askProductName() }
-        ui.catalog.setOnClickListener { startActivity(Intent(this, CatalogActivity::class.java)) }
-        ui.scale.setOnClickListener { startActivity(Intent(this, ScaleActivity::class.java)) }
-        ui.integration.setOnClickListener {
-            startActivity(Intent(this, IntegrationActivity::class.java))
-        }
+        ui.getWeight.setOnClickListener { fetchWeight(manual = true) }
         ui.doneAdding.setOnClickListener { finishAdding() }
+        ui.newProduct.setOnClickListener { askProductName() }
+        ui.catalog.setOnClickListener { open(CatalogActivity::class.java) }
+        ui.scale.setOnClickListener { open(ScaleActivity::class.java) }
+        ui.integration.setOnClickListener { open(IntegrationActivity::class.java) }
 
         worker.execute {
             val ms = measureTimeMillis {
@@ -63,20 +70,60 @@ class MainActivity : AppCompatActivity() {
                 encoder = App.encoder(this)
             }
             runOnUiThread {
-                ui.status.text = getString(R.string.ready, store?.size ?: 0, ms)
+                ui.status.text = getString(R.string.ready_ms, ms)
                 ui.shoot.isEnabled = true
+                showState()
             }
         }
+
+        // Сервер для 1С поднимается сам, если его включали раньше
+        Servers.restoreIfEnabled(this)
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             == PackageManager.PERMISSION_GRANTED
         ) startCamera() else askCamera.launch(Manifest.permission.CAMERA)
     }
 
+    private fun open(screen: Class<*>) = startActivity(Intent(this, screen))
+
     override fun onResume() {
         super.onResume()
-        // Из каталога могли удалить товар — обновим счётчик
-        store?.let { ui.status.text = getString(R.string.shots_total, it.size, it.catalog().size) }
+        showState()
+    }
+
+    /** Всё, что видно на рабочем экране: вес, выбранный товар, состояние связи. */
+    private fun showState() {
+        val now = State.current
+
+        val grams = now.weightGrams
+        ui.weight.text = when {
+            grams == null -> getString(R.string.weight_zero)
+            kotlin.math.abs(grams) >= 1000 -> getString(R.string.scale_kg, grams / 1000)
+            else -> getString(R.string.scale_g, grams)
+        }
+        ui.weightNote.text = when {
+            !scaleSettings.configured -> getString(R.string.weight_no_scale)
+            grams == null -> getString(R.string.weight_not_asked)
+            now.stable -> getString(R.string.scale_stable)
+            else -> getString(R.string.scale_unstable)
+        }
+        ui.getWeight.isEnabled = scaleSettings.configured
+
+        ui.chosen.text = if (now.code.isBlank() && now.name.isBlank()) {
+            getString(R.string.chosen_none)
+        } else {
+            getString(R.string.chosen, now.name, now.code.ifBlank { "—" }, now.score * 100)
+        }
+
+        val base = store
+        ui.links.text = buildString {
+            append(if (Servers.running) getString(R.string.link_server_on, Servers.httpPort(this@MainActivity))
+                   else getString(R.string.link_server_off))
+            append("   ·   ")
+            append(if (scaleSettings.configured) getString(R.string.link_scale_on, scaleSettings.host)
+                   else getString(R.string.link_scale_off))
+            if (base != null) append("   ·   ").append(getString(R.string.link_base, base.size))
+        }
     }
 
     private fun startCamera() {
@@ -90,7 +137,40 @@ class MainActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    // ---------------------------------------------------------------- поиск
+    // ------------------------------------------------------------- вес
+
+    /**
+     * Спрашивает массу у настоящих весов. Вызывается кнопкой и сам —
+     * сразу после распознавания, чтобы одно нажатие давало и товар, и вес.
+     */
+    private fun fetchWeight(manual: Boolean) {
+        if (!scaleSettings.configured) {
+            if (manual) Toast.makeText(this, R.string.weight_no_scale, Toast.LENGTH_LONG).show()
+            return
+        }
+        ui.getWeight.isEnabled = false
+        if (manual) ui.weightNote.text = getString(R.string.weight_asking)
+
+        worker.execute {
+            val known = scaleSettings.crcInit.takeIf { it >= 0 }
+            val result = scaleSettings.client().ask(ScaleProtocol.CMD_GET_MASSA, known)
+            val reply = result.reply
+            if (reply is ScaleProtocol.Reply.Massa) {
+                scaleSettings.crcInit = result.crcInit
+                State.setWeight(reply.grams, reply.stable)
+            }
+            runOnUiThread {
+                if (reply !is ScaleProtocol.Reply.Massa) {
+                    val what = result.error ?: (reply as? ScaleProtocol.Reply.Failed)?.what ?: "—"
+                    ui.weightNote.text = getString(R.string.scale_failed, what)
+                }
+                ui.getWeight.isEnabled = true
+                showState()
+            }
+        }
+    }
+
+    // ------------------------------------------------------- распознавание
 
     private fun recognize() {
         val engine = encoder ?: return
@@ -110,13 +190,15 @@ class MainActivity : AppCompatActivity() {
                 lastFrame = frame
                 matches = base.search(vector, 5)
             }
-            // Верхний вариант становится тем, что отдаётся в 1С
             matches.firstOrNull()?.let { top ->
                 State.setProduct(codeOf(top.label), top.label, top.score)
             }
             runOnUiThread {
                 showResults(matches, ms)
+                showState()
                 ui.shoot.isEnabled = true
+                // Одно нажатие — и товар, и вес
+                if (scaleSettings.configured) fetchWeight(manual = false)
             }
         }
     }
@@ -135,17 +217,19 @@ class MainActivity : AppCompatActivity() {
             val bar = row.findViewById<View>(R.id.bar)
             bar.layoutParams = (bar.layoutParams as LinearLayout.LayoutParams)
                 .apply { weight = match.score.coerceIn(0f, 1f) }
-            if (position == 0) row.setBackgroundResource(R.color.top_row)
-            row.setOnClickListener {
-                // Выбор оператора важнее догадки: он и уходит в 1С
-                State.setProduct(codeOf(match.label), match.label, match.score)
-                offerToTeach(match.label)
-            }
+            if (position == 0) row.setBackgroundResource(R.drawable.card_top)
+            row.setOnClickListener { choose(match) }
             ui.results.addView(row)
         }
     }
 
-    /** Нажали на вариант — предлагаем запомнить этот кадр как ещё один снимок товара. */
+    /** Выбор оператора важнее догадки: он и уходит в 1С. */
+    private fun choose(match: Match) {
+        State.setProduct(codeOf(match.label), match.label, match.score)
+        showState()
+        offerToTeach(match.label)
+    }
+
     private fun offerToTeach(name: String) {
         val vector = lastEmbedding ?: return
         AlertDialog.Builder(this)
@@ -154,13 +238,13 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton(R.string.teach_yes) { _, _ ->
                 store?.add(vector, name, lastFrame)
                 Toast.makeText(this, getString(R.string.taught, name), Toast.LENGTH_SHORT).show()
-                store?.let { ui.status.text = getString(R.string.shots_total, it.size, it.catalog().size) }
+                showState()
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
     }
 
-    // ------------------------------------------------------- новый товар
+    // --------------------------------------------------------- новый товар
 
     private fun askProductName() {
         val field = EditText(this).apply { hint = getString(R.string.product_hint) }
@@ -193,6 +277,7 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 ui.status.text = getString(R.string.adding, name, addedCount)
                 ui.shoot.isEnabled = true
+                showState()
             }
         }
     }
@@ -203,7 +288,7 @@ class MainActivity : AppCompatActivity() {
         ui.doneAdding.visibility = View.GONE
         ui.shoot.setText(R.string.shoot)
         Toast.makeText(this, getString(R.string.added, name, addedCount), Toast.LENGTH_LONG).show()
-        store?.let { ui.status.text = getString(R.string.shots_total, it.size, it.catalog().size) }
+        showState()
     }
 
     override fun onDestroy() {

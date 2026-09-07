@@ -10,6 +10,22 @@
 
     <string name="loading">Загружаю модель…</string>
     <string name="ready">Готово: %1$d снимков в базе, модель поднялась за %2$d мс</string>
+    <string name="ready_ms">Модель поднялась за %1$d мс</string>
+
+    <string name="weight_zero">0 г</string>
+    <string name="weight_get">Вес</string>
+    <string name="weight_asking">спрашиваю весы…</string>
+    <string name="weight_no_scale">весы не настроены</string>
+    <string name="weight_not_asked">вес ещё не запрашивали</string>
+
+    <string name="chosen_none">Товар не выбран — нажмите «Распознать»</string>
+    <string name="chosen">%1$s\n%2$s · %3$.0f %%</string>
+
+    <string name="link_server_on">● 1С: порт %1$d</string>
+    <string name="link_server_off">○ 1С: выключено</string>
+    <string name="link_scale_on">● весы: %1$s</string>
+    <string name="link_scale_off">○ весы: не настроены</string>
+    <string name="link_base">база: %1$d</string>
     <string name="thinking">Считаю…</string>
     <string name="took">Ответ за %1$d мс</string>
     <string name="no_frame">Кадр не получен</string>

@@ -16,7 +16,6 @@ class IntegrationActivity : AppCompatActivity() {
 
     private lateinit var ui: ActivityIntegrationBinding
     private val prefs by lazy { getSharedPreferences("server", Context.MODE_PRIVATE) }
-    private val lines = ArrayList<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +27,7 @@ class IntegrationActivity : AppCompatActivity() {
 
         ui.toggle.setOnClickListener { if (Servers.running) stop() else start() }
         ui.copy.setOnClickListener { copySettings() }
+        showJournal()
         refresh()
     }
 
@@ -43,21 +43,18 @@ class IntegrationActivity : AppCompatActivity() {
 
     private fun start() {
         savePorts()
-        lines.clear()
-        Servers.start(httpPort, scalePort) { line ->
-            runOnUiThread {
-                lines.add(0, line)
-                while (lines.size > 30) lines.removeAt(lines.size - 1)
-                ui.log.text = lines.joinToString("\n")
-                refresh()
-            }
-        }
+        Servers.start(this) { runOnUiThread { showJournal(); refresh() } }
+        showJournal()
         refresh()
     }
 
     private fun stop() {
-        Servers.stop()
+        Servers.stop(this)
         refresh()
+    }
+
+    private fun showJournal() {
+        ui.log.text = Servers.journal.joinToString("\n")
     }
 
     private fun refresh() {
@@ -108,19 +105,54 @@ class IntegrationActivity : AppCompatActivity() {
     }
 }
 
-/** Один экземпляр серверов на всё приложение: они должны пережить смену экрана. */
+/**
+ * Один экземпляр серверов на всё приложение.
+ *
+ * Они переживают смену экрана и поднимаются сами при следующем запуске,
+ * если их однажды включили: иначе после перезагрузки телефона касса
+ * молча перестала бы получать данные.
+ */
 object Servers {
     private var server: LocalServer? = null
+    private val recent = ArrayList<String>()
 
     val running get() = server?.running == true
 
-    fun start(httpPort: Int, scalePort: Int, log: (String) -> Unit) {
+    /** Последние строки журнала — чтобы они не пропадали при уходе с экрана. */
+    val journal: List<String> get() = recent.toList()
+
+    private fun prefs(context: Context) =
+        context.getSharedPreferences("server", Context.MODE_PRIVATE)
+
+    fun httpPort(context: Context) = prefs(context).getInt("http", 8090)
+    fun scalePort(context: Context) = prefs(context).getInt("scale", 5001)
+
+    fun start(context: Context, log: (String) -> Unit = {}) {
         stop()
-        server = LocalServer(httpPort, scalePort, log).also { it.start() }
+        prefs(context).edit().putBoolean("enabled", true).apply()
+        val http = httpPort(context)
+        val scale = scalePort(context)
+        server = LocalServer(http, scale) { line ->
+            synchronized(recent) {
+                recent.add(0, line)
+                while (recent.size > 40) recent.removeAt(recent.size - 1)
+            }
+            log(line)
+        }.also { it.start() }
     }
 
-    fun stop() {
+    fun stop(context: Context? = null) {
+        context?.prefsDisable()
         server?.stop()
         server = null
+    }
+
+    private fun Context.prefsDisable() =
+        prefs(this).edit().putBoolean("enabled", false).apply()
+
+    /** Поднять сервера при запуске приложения, если их включали раньше. */
+    fun restoreIfEnabled(context: Context) {
+        if (running) return
+        if (prefs(context).getBoolean("enabled", false)) start(context)
     }
 }
