@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="4dp"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/text"
+            android:text="@string/integration" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="4dp"
+            android:paddingBottom="14dp"
+            android:textSize="12sp"
+            android:textColor="@color/muted"
+            android:text="@string/srv_intro" />
+
+        <TextView
+            android:id="@+id/state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/card"
+            android:padding="14dp"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/text" />
+
+        <TextView
+            android:id="@+id/address"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/card"
+            android:padding="14dp"
+            android:textSize="15sp"
+            android:textColor="@color/text" />
+
+        <TextView style="@style/FieldLabel" android:text="@string/srv_http_port" />
+        <EditText
+            android:id="@+id/httpPort"
+            style="@style/Field"
+            android:inputType="number" />
+
+        <TextView style="@style/FieldLabel" android:text="@string/srv_scale_port" />
+        <EditText
+            android:id="@+id/scalePort"
+            style="@style/Field"
+            android:inputType="number" />
+
+        <Button
+            android:id="@+id/toggle"
+            style="@style/Btn.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_marginTop="18dp"
+            android:text="@string/srv_start" />
+
+        <Button
+            android:id="@+id/copy"
+            style="@style/Btn.Ghost"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/srv_copy" />
+
+        <TextView
+            android:id="@+id/hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/card"
+            android:padding="14dp"
+            android:fontFamily="monospace"
+            android:textSize="12sp"
+            android:textColor="@color/muted" />
+
+        <TextView
+            android:id="@+id/log"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/card"
+            android:padding="14dp"
+            android:fontFamily="monospace"
+            android:textSize="11sp"
+            android:textColor="@color/muted" />
+    </LinearLayout>
+</ScrollView>

@@ -51,6 +51,10 @@ class MainActivity : AppCompatActivity() {
         ui.shoot.setOnClickListener { if (addingTo != null) captureForProduct() else recognize() }
         ui.newProduct.setOnClickListener { askProductName() }
         ui.catalog.setOnClickListener { startActivity(Intent(this, CatalogActivity::class.java)) }
+        ui.scale.setOnClickListener { startActivity(Intent(this, ScaleActivity::class.java)) }
+        ui.integration.setOnClickListener {
+            startActivity(Intent(this, IntegrationActivity::class.java))
+        }
         ui.doneAdding.setOnClickListener { finishAdding() }
 
         worker.execute {
@@ -106,12 +110,20 @@ class MainActivity : AppCompatActivity() {
                 lastFrame = frame
                 matches = base.search(vector, 5)
             }
+            // Верхний вариант становится тем, что отдаётся в 1С
+            matches.firstOrNull()?.let { top ->
+                State.setProduct(codeOf(top.label), top.label, top.score)
+            }
             runOnUiThread {
                 showResults(matches, ms)
                 ui.shoot.isEnabled = true
             }
         }
     }
+
+    /** Папки названы «<артикул> <наименование>» — вытаскиваем артикул. */
+    private fun codeOf(label: String): String =
+        Regex("^([А-Яа-яA-Za-z0-9]+-\\d+)\\s").find(label)?.groupValues?.get(1) ?: ""
 
     private fun showResults(matches: List<Match>, ms: Long) {
         ui.status.text = getString(R.string.took, ms)
@@ -124,7 +136,11 @@ class MainActivity : AppCompatActivity() {
             bar.layoutParams = (bar.layoutParams as LinearLayout.LayoutParams)
                 .apply { weight = match.score.coerceIn(0f, 1f) }
             if (position == 0) row.setBackgroundResource(R.color.top_row)
-            row.setOnClickListener { offerToTeach(match.label) }
+            row.setOnClickListener {
+                // Выбор оператора важнее догадки: он и уходит в 1С
+                State.setProduct(codeOf(match.label), match.label, match.score)
+                offerToTeach(match.label)
+            }
             ui.results.addView(row)
         }
     }

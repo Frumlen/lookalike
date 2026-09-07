@@ -62,4 +62,36 @@
     <string name="wipe_sure">Вы действительно хотите удалить все товары?\n\nПосле этого все ранее накопленные данные по распознаванию будут безвозвратно утеряны.</string>
     <string name="wipe_do">Удалить всё</string>
     <string name="wipe_done">База очищена</string>
+
+    <string name="scale">Весы</string>
+    <string name="scale_hint">Масса-К, «Протокол 100» по сети. Адрес и порт смотрите в настройках самих весов — те же, что прописаны в 1С.</string>
+    <string name="scale_ip">IP-адрес весов</string>
+    <string name="scale_port">Порт</string>
+    <string name="scale_timeout">Таймаут, мс</string>
+    <string name="scale_weigh">Получить вес</string>
+    <string name="scale_params">Запросить параметры весов</string>
+    <string name="scale_asking">Спрашиваю…</string>
+    <string name="scale_no_host">Не заполнен адрес весов</string>
+    <string name="scale_failed">Не вышло: %1$s</string>
+    <string name="scale_unknown">Неизвестный ответ, код 0x%1$02X</string>
+    <string name="scale_stable">масса устоялась</string>
+    <string name="scale_unstable">масса ещё скачет</string>
+    <string name="scale_tare">тара: %1$s</string>
+    <string name="scale_kg">%1$.3f кг</string>
+    <string name="scale_g">%1$.0f г</string>
+
+    <string name="integration">Для 1С</string>
+    <string name="srv_intro">Приложение работает как устройство, у которого 1С забирает данные. Вес берётся с весов, штрихкод — из распознавания.</string>
+    <string name="srv_on">Работает</string>
+    <string name="srv_off">Остановлено</string>
+    <string name="srv_start">Запустить</string>
+    <string name="srv_stop">Остановить</string>
+    <string name="srv_address">Адрес этого устройства: %1$s</string>
+    <string name="srv_http_port">Порт HTTP (вес + штрихкод)</string>
+    <string name="srv_scale_port">Порт весов (только вес)</string>
+    <string name="srv_urls">http://%1$s:%2$d/         вес и товар\nhttp://%1$s:%2$d/weight   только вес\nhttp://%1$s:%2$d/product  только товар\n\n%3$s:%4$d — весы Масса-К, Протокол 100</string>
+    <string name="srv_copy">Отправить настройки</string>
+    <string name="srv_copied">Скопировано</string>
+    <string name="srv_send">Отправить настройки</string>
+    <string name="srv_share">Настройки lookalike для 1С\n\nАдрес устройства: %1$s\n\n1) Вес и штрихкод вместе, обычным HTTP-запросом:\nhttp://%2$s:%3$d/\nОтвет: {"weight_g":1234,"stable":true,"code":"ТБ-00007957","name":"Курзе с мясом","score":0.93}\n\n2) Только вес, штатным драйвером весов Масса-К:\nIP %4$s, порт %5$d, Протокол 100\n\nУстройство должно быть в одной сети с кассой.</string>
 </resources>

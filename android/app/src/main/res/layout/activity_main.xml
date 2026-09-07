@@ -76,5 +76,23 @@
             android:layout_marginStart="10dp"
             android:layout_weight="1"
             android:text="@string/catalog" />
+
+        <Button
+            android:id="@+id/scale"
+            style="@style/Btn.Ghost"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:text="@string/scale" />
+
+        <Button
+            android:id="@+id/integration"
+            style="@style/Btn.Ghost"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:text="@string/integration" />
     </LinearLayout>
 </LinearLayout>
