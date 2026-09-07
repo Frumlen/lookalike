@@ -24,11 +24,24 @@ import java.util.zip.ZipOutputStream
  * приложения. Ссылка на миниатюру имеет префикс: "a/" — лежит в assets,
  * "f/" — снято на телефоне и лежит в файлах приложения.
  */
+/**
+ * Что знаем о товаре помимо снимков.
+ *
+ * Задаётся руками и из названия не выводится: название нужно человеку,
+ * а 1С ищет товар по номеру и штрихкоду. Свяжи их — и переименование
+ * товара молча оборвёт связь с кассой.
+ */
+data class ProductInfo(val plu: String = "", val barcode: String = "")
+
 class IndexStore(private val context: Context) {
 
     private val vectors = ArrayList<FloatArray>()
     private val labels = ArrayList<String>()
     private val thumbs = ArrayList<String>()
+
+    /** Название товара -> его номер на весах и штрихкод. */
+    private val products = HashMap<String, ProductInfo>()
+
     var dim: Int = 0
         private set
 
@@ -38,6 +51,14 @@ class IndexStore(private val context: Context) {
 
     init {
         if (binFile.exists() && metaFile.exists()) load() else seedFromAssets()
+    }
+
+    private fun readProducts(meta: JSONObject) {
+        val block = meta.optJSONObject("products") ?: return
+        for (name in block.keys()) {
+            val item = block.optJSONObject(name) ?: continue
+            products[name] = ProductInfo(item.optString("plu"), item.optString("barcode"))
+        }
     }
 
     private fun readVectors(raw: ByteArray, meta: JSONObject, names: JSONArray, thumbList: JSONArray?) {
@@ -54,6 +75,7 @@ class IndexStore(private val context: Context) {
 
     private fun seedFromAssets() {
         val meta = JSONObject(context.assets.open("index.json").bufferedReader().readText())
+        readProducts(meta)
         readVectors(
             context.assets.open("index.bin").readBytes(),
             meta,
@@ -65,6 +87,7 @@ class IndexStore(private val context: Context) {
 
     private fun load() {
         val meta = JSONObject(metaFile.readText())
+        readProducts(meta)
         readVectors(binFile.readBytes(), meta, meta.getJSONArray("labels"),
             meta.optJSONArray("thumbs"))
     }
@@ -78,9 +101,34 @@ class IndexStore(private val context: Context) {
                 .put("dim", dim)
                 .put("labels", JSONArray(labels))
                 .put("thumbs", JSONArray(thumbs))
+                .put("products", productsJson())
                 .toString()
         )
     }
+
+    private fun productsJson(): JSONObject {
+        val block = JSONObject()
+        products.forEach { (name, info) ->
+            if (info.plu.isNotBlank() || info.barcode.isNotBlank()) {
+                block.put(name, JSONObject().put("plu", info.plu).put("barcode", info.barcode))
+            }
+        }
+        return block
+    }
+
+    // ------------------------------------------------- сведения о товаре
+
+    fun infoOf(name: String): ProductInfo = products[name] ?: ProductInfo()
+
+    fun setInfo(name: String, info: ProductInfo) {
+        if (info.plu.isBlank() && info.barcode.isBlank()) products.remove(name)
+        else products[name] = info
+        save()
+    }
+
+    /** Товары без номера на весах — по ним 1С не сможет найти позицию. */
+    fun withoutPlu(): List<String> =
+        catalog().map { it.first }.filter { infoOf(it).plu.isBlank() }
 
     /**
      * Вся база одним файлом: векторы, названия и снимки. Файл самодостаточный —
@@ -118,6 +166,7 @@ class IndexStore(private val context: Context) {
                     .put("count", vectors.size)
                     .put("labels", JSONArray(labels))
                     .put("thumbs", JSONArray(names))
+                    .put("products", productsJson())
                     .toString().toByteArray()
             )
             zip.closeEntry()
@@ -158,7 +207,8 @@ class IndexStore(private val context: Context) {
         val bin = raw ?: throw IllegalArgumentException("нет vectors.bin")
 
         thumbDir.listFiles()?.forEach { it.delete() }
-        vectors.clear(); labels.clear(); thumbs.clear()
+        vectors.clear(); labels.clear(); thumbs.clear(); products.clear()
+        readProducts(info)
 
         dim = info.getInt("dim")
         val names = info.getJSONArray("labels")
@@ -222,6 +272,7 @@ class IndexStore(private val context: Context) {
                 vectors.removeAt(n); labels.removeAt(n); thumbs.removeAt(n)
             }
         }
+        products.remove(name)
         save()
     }
 
@@ -235,11 +286,13 @@ class IndexStore(private val context: Context) {
         vectors.clear()
         labels.clear()
         thumbs.clear()
+        products.clear()
         save()
     }
 
     fun rename(from: String, to: String) {
         for (n in labels.indices) if (labels[n] == from) labels[n] = to
+        products.remove(from)?.let { products[to] = it }     // номер и штрихкод едут следом
         save()
     }
 

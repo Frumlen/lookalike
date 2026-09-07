@@ -79,7 +79,7 @@ object ScaleProtocol {
         return when (val command = body[0].toInt() and 0xFF) {
             CMD_ACK_MASSA -> parseMassa(body)
             CMD_ACK_SCALE_PAR -> Reply.Params(
-                String(body, 1, body.size - 1, Charsets.ISO_8859_1)
+                decodeText(body, 1, body.size - 1)
                     .split("\r\n").filter { it.isNotBlank() }.joinToString("\n")
             )
             CMD_ERROR -> {
@@ -89,6 +89,13 @@ object ScaleProtocol {
             CMD_NACK -> Reply.Failed(CMD_NACK, "весы не поняли команду")
             else -> Reply.Unknown(command)
         }
+    }
+
+    /** Весы шлют текст в кириллице; UTF-8 у них не в ходу, отсюда CP1251. */
+    private fun decodeText(data: ByteArray, from: Int, length: Int): String = try {
+        String(data, from, length, charset("windows-1251"))
+    } catch (_: Exception) {
+        String(data, from, length, Charsets.ISO_8859_1)
     }
 
     private fun parseMassa(body: ByteArray): Reply {

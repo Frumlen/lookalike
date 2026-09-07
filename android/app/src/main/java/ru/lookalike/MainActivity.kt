@@ -34,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     private var encoder: Encoder? = null
     private var store: IndexStore? = null
     private val scaleSettings by lazy { ScaleSettings(this) }
+    private val barcodes by lazy { BarcodeSettings(this) }
 
     /** Кадр и его вектор — чтобы можно было приписать снимок к товару. */
     private var lastEmbedding: FloatArray? = null
@@ -109,10 +110,21 @@ class MainActivity : AppCompatActivity() {
         }
         ui.getWeight.isEnabled = scaleSettings.configured
 
-        ui.chosen.text = if (now.code.isBlank() && now.name.isBlank()) {
+        ui.chosen.text = if (now.name.isBlank()) {
             getString(R.string.chosen_none)
-        } else {
-            getString(R.string.chosen, now.name, now.code.ifBlank { "—" }, now.score * 100)
+        } else buildString {
+            append(getString(R.string.chosen_name, now.name, now.score * 100))
+            append('\n')
+            when {
+                now.plu.isBlank() ->
+                    // Без номера касса товар не найдёт — говорим прямо
+                    append(getString(R.string.chosen_no_plu))
+                else -> {
+                    val code = barcodes.build(now.plu, (grams ?: 0.0).toInt())
+                    append(getString(R.string.chosen_plu, now.plu))
+                    if (code.isNotBlank()) append("  ").append(code)
+                }
+            }
         }
 
         val base = store
@@ -190,9 +202,7 @@ class MainActivity : AppCompatActivity() {
                 lastFrame = frame
                 matches = base.search(vector, 5)
             }
-            matches.firstOrNull()?.let { top ->
-                State.setProduct(codeOf(top.label), top.label, top.score)
-            }
+            matches.firstOrNull()?.let { top -> select(top, base) }
             runOnUiThread {
                 showResults(matches, ms)
                 showState()
@@ -203,9 +213,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** Папки названы «<артикул> <наименование>» — вытаскиваем артикул. */
-    private fun codeOf(label: String): String =
-        Regex("^([А-Яа-яA-Za-z0-9]+-\\d+)\\s").find(label)?.groupValues?.get(1) ?: ""
+    /** Товар, который уйдёт в 1С: название плюс его номер и штрихкод из базы. */
+    private fun select(match: Match, base: IndexStore) {
+        State.setProduct(match.label, base.infoOf(match.label), match.score)
+    }
 
     private fun showResults(matches: List<Match>, ms: Long) {
         ui.status.text = getString(R.string.took, ms)
@@ -225,7 +236,7 @@ class MainActivity : AppCompatActivity() {
 
     /** Выбор оператора важнее догадки: он и уходит в 1С. */
     private fun choose(match: Match) {
-        State.setProduct(codeOf(match.label), match.label, match.score)
+        store?.let { select(match, it) }
         showState()
         offerToTeach(match.label)
     }
@@ -247,13 +258,24 @@ class MainActivity : AppCompatActivity() {
     // --------------------------------------------------------- новый товар
 
     private fun askProductName() {
-        val field = EditText(this).apply { hint = getString(R.string.product_hint) }
+        val view = layoutInflater.inflate(R.layout.dialog_product, null)
+        val nameField = view.findViewById<EditText>(R.id.name)
+        val pluField = view.findViewById<EditText>(R.id.plu)
+        val barcodeField = view.findViewById<EditText>(R.id.barcode)
+
         AlertDialog.Builder(this)
             .setTitle(R.string.new_product)
-            .setView(field)
+            .setView(view)
             .setPositiveButton(R.string.start) { _, _ ->
-                val name = field.text.toString().trim()
+                val name = nameField.text.toString().trim()
                 if (name.isEmpty()) return@setPositiveButton
+                store?.setInfo(
+                    name,
+                    ProductInfo(
+                        pluField.text.toString().trim(),
+                        barcodeField.text.toString().trim()
+                    )
+                )
                 addingTo = name
                 addedCount = 0
                 ui.results.removeAllViews()

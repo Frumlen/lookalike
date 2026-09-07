@@ -14,8 +14,11 @@ import java.util.concurrent.atomic.AtomicReference
 data class Current(
     val weightGrams: Double? = null,
     val stable: Boolean = false,
-    val code: String = "",
     val name: String = "",
+    /** Номер товара на весах: из него собирается весовой штрихкод. */
+    val plu: String = "",
+    /** Обычный штрихкод товара, если он задан. */
+    val barcode: String = "",
     val score: Float = 0f,
     val at: Long = System.currentTimeMillis()
 )
@@ -30,8 +33,13 @@ object State {
         ref.set(ref.get().copy(weightGrams = grams, stable = stable, at = System.currentTimeMillis()))
     }
 
-    fun setProduct(code: String, name: String, score: Float) {
-        ref.set(ref.get().copy(code = code, name = name, score = score, at = System.currentTimeMillis()))
+    fun setProduct(name: String, info: ProductInfo, score: Float) {
+        ref.set(
+            ref.get().copy(
+                name = name, plu = info.plu, barcode = info.barcode,
+                score = score, at = System.currentTimeMillis()
+            )
+        )
     }
 }
 
@@ -80,6 +88,7 @@ fun localIp(): String = localAddresses().firstOrNull { it.local }?.ip ?: ""
 class LocalServer(
     private val httpPort: Int,
     private val scalePort: Int,
+    private val barcodes: BarcodeSettings,
     private val log: (String) -> Unit
 ) {
 
@@ -130,8 +139,9 @@ class LocalServer(
                 }
             }
         } catch (exc: Exception) {
+            // Гасим только этот порт: второй должен работать дальше,
+            // иначе занятый HTTP уронил бы и связь с кассой по весам
             log("порт $port занять не вышло: ${exc.message}")
-            running = false
         }
     }
 
@@ -145,12 +155,19 @@ class LocalServer(
         val now = State.current
         log("HTTP $path")
 
+        // Весовой штрихкод собирается на лету: в нём зашита текущая масса
+        val grams = (now.weightGrams ?: 0.0).toInt()
+        val weightBarcode = barcodes.build(now.plu, grams)
+        val product = """"name":${str(now.name)},"plu":${str(now.plu)},""" +
+            """"barcode":${str(now.barcode)},"weight_barcode":${str(weightBarcode)},""" +
+            """"score":${dec(now.score)}"""
+
         val body = when (path) {
             "/weight" -> """{"weight_g":${num(now.weightGrams)},"stable":${now.stable}}"""
-            "/product" -> """{"code":${str(now.code)},"name":${str(now.name)},"score":${dec(now.score)}}"""
+            "/product" -> "{$product}"
             else -> """{"weight_g":${num(now.weightGrams)},"stable":${now.stable},""" +
-                """"code":${str(now.code)},"name":${str(now.name)},""" +
-                """"score":${dec(now.score)},"age_ms":${System.currentTimeMillis() - now.at}}"""
+                "$product," +
+                """"age_ms":${System.currentTimeMillis() - now.at}}"""
         }
         val bytes = body.toByteArray(Charsets.UTF_8)
         socket.getOutputStream().apply {

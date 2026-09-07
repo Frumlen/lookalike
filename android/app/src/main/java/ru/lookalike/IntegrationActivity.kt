@@ -16,6 +16,7 @@ class IntegrationActivity : AppCompatActivity() {
 
     private lateinit var ui: ActivityIntegrationBinding
     private val prefs by lazy { getSharedPreferences("server", Context.MODE_PRIVATE) }
+    private val barcodes by lazy { BarcodeSettings(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,10 +25,25 @@ class IntegrationActivity : AppCompatActivity() {
 
         ui.httpPort.setText(httpPort.toString())
         ui.scalePort.setText(scalePort.toString())
+        ui.bcPrefix.setText(barcodes.prefix)
+        ui.bcPlu.setText(barcodes.pluDigits.toString())
+        ui.bcWeight.setText(barcodes.weightDigits.toString())
+
+        // Пересобираем пример на каждое изменение: сразу видно, сходится ли разметка
+        listOf(ui.bcPrefix, ui.bcPlu, ui.bcWeight).forEach { field ->
+            field.addTextChangedListener(object : android.text.TextWatcher {
+                override fun afterTextChanged(s: android.text.Editable?) {
+                    saveBarcode(); showBarcode()
+                }
+                override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) = Unit
+                override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) = Unit
+            })
+        }
 
         ui.toggle.setOnClickListener { if (Servers.running) stop() else start() }
         ui.copy.setOnClickListener { copySettings() }
         showJournal()
+        showBarcode()
         refresh()
     }
 
@@ -55,6 +71,23 @@ class IntegrationActivity : AppCompatActivity() {
 
     private fun showJournal() {
         ui.log.text = Servers.journal.joinToString("\n")
+    }
+
+    private fun saveBarcode() {
+        barcodes.prefix = ui.bcPrefix.text.toString()
+        barcodes.pluDigits = ui.bcPlu.text.toString().toIntOrNull() ?: 5
+        barcodes.weightDigits = ui.bcWeight.text.toString().toIntOrNull() ?: 6
+    }
+
+    private fun showBarcode() {
+        ui.bcPreview.text = if (barcodes.valid) {
+            getString(R.string.bc_ok, barcodes.template, barcodes.sample())
+        } else {
+            getString(
+                R.string.bc_bad,
+                barcodes.prefix.length + barcodes.pluDigits + barcodes.weightDigits
+            )
+        }
     }
 
     private fun refresh() {
@@ -132,7 +165,7 @@ object Servers {
         prefs(context).edit().putBoolean("enabled", true).apply()
         val http = httpPort(context)
         val scale = scalePort(context)
-        server = LocalServer(http, scale) { line ->
+        server = LocalServer(http, scale, BarcodeSettings(context)) { line ->
             synchronized(recent) {
                 recent.add(0, line)
                 while (recent.size > 40) recent.removeAt(recent.size - 1)

@@ -31,7 +31,15 @@ class ProductActivity : AppCompatActivity() {
         title = product
         ui.name.text = product
         val shots = store.shotsOf(product)
-        ui.summary.text = resources.getQuantityString(R.plurals.shots, shots.size, shots.size)
+        val info = store.infoOf(product)
+        ui.summary.text = buildString {
+            append(resources.getQuantityString(R.plurals.shots, shots.size, shots.size))
+            append("   ·   ")
+            // Без номера на весах касса не найдёт позицию — это надо видеть сразу
+            if (info.plu.isBlank()) append(getString(R.string.chosen_no_plu))
+            else append(getString(R.string.chosen_plu, info.plu))
+            if (info.barcode.isNotBlank()) append("   ·   ").append(info.barcode)
+        }
 
         ui.grid.removeAllViews()
         ui.grid.columnCount = 3
@@ -66,19 +74,35 @@ class ProductActivity : AppCompatActivity() {
             .show()
     }
 
+    /** Правка карточки: название для человека, номер и штрихкод для кассы. */
     private fun askRename() {
-        val field = EditText(this).apply { setText(product) }
+        val view = layoutInflater.inflate(R.layout.dialog_product, null)
+        val nameField = view.findViewById<EditText>(R.id.name)
+        val pluField = view.findViewById<EditText>(R.id.plu)
+        val barcodeField = view.findViewById<EditText>(R.id.barcode)
+
+        val info = store.infoOf(product)
+        nameField.setText(product)
+        pluField.setText(info.plu)
+        barcodeField.setText(info.barcode)
+
         AlertDialog.Builder(this)
-            .setTitle(R.string.rename)
-            .setMessage(R.string.rename_hint)
-            .setView(field)
+            .setTitle(R.string.edit_product)
+            .setView(view)
             .setPositiveButton(R.string.save) { _, _ ->
-                val to = field.text.toString().trim()
+                val to = nameField.text.toString().trim()
                 if (to.isNotEmpty() && to != product) {
                     store.rename(product, to)
                     product = to
-                    refresh()
                 }
+                store.setInfo(
+                    product,
+                    ProductInfo(
+                        pluField.text.toString().trim(),
+                        barcodeField.text.toString().trim()
+                    )
+                )
+                refresh()
             }
             .setNegativeButton(R.string.cancel, null)
             .show()

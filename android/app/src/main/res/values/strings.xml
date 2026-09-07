@@ -19,7 +19,19 @@
     <string name="weight_not_asked">вес ещё не запрашивали</string>
 
     <string name="chosen_none">Товар не выбран — нажмите «Распознать»</string>
-    <string name="chosen">%1$s\n%2$s · %3$.0f %%</string>
+    <string name="chosen_name">%1$s · %2$.0f %%</string>
+    <string name="chosen_plu">№ %1$s</string>
+    <string name="chosen_no_plu">без номера — касса не найдёт</string>
+
+    <string name="edit_product">Карточка товара</string>
+    <string name="field_name">Название</string>
+    <string name="field_name_hint">Как называется товар</string>
+    <string name="field_plu">Номер на весах (PLU)</string>
+    <string name="field_plu_hint">например 55</string>
+    <string name="field_plu_note">Тот же номер, что у товара в 1С. Из него собирается весовой штрихкод — без него касса товар не найдёт.</string>
+    <string name="field_barcode">Штрихкод, если есть</string>
+    <string name="field_barcode_hint">необязательно</string>
+    <string name="field_barcode_note">Для штучного товара. Для весового не нужен: штрихкод собирается из номера и массы.</string>
 
     <string name="link_server_on">● 1С: порт %1$d</string>
     <string name="link_server_off">○ 1С: выключено</string>
@@ -31,11 +43,9 @@
     <string name="no_frame">Кадр не получен</string>
     <string name="no_camera">Нет доступа к камере</string>
     <string name="percent">%1$.1f %%</string>
-    <string name="shots_total">В базе %1$d снимков, товаров %2$d</string>
 
     <string name="new_product">Новый товар</string>
     <string name="catalog">Товары</string>
-    <string name="product_hint">Название товара</string>
     <string name="adding">Добавляю «%1$s»: снято %2$d</string>
     <string name="added">«%1$s» добавлен, снимков: %2$d</string>
 
@@ -112,4 +122,12 @@
     <string name="srv_copied">Скопировано</string>
     <string name="srv_send">Отправить настройки</string>
     <string name="srv_share">Настройки lookalike для 1С\n\nАдрес устройства: %1$s\n\n1) Вес и штрихкод вместе, обычным HTTP-запросом:\nhttp://%2$s:%3$d/\nОтвет: {"weight_g":1234,"stable":true,"code":"ТБ-00007957","name":"Курзе с мясом","score":0.93}\n\n2) Только вес, штатным драйвером весов Масса-К:\nIP %4$s, порт %5$d, Протокол 100\n\nУстройство должно быть в одной сети с кассой.</string>
+
+    <string name="bc_title">Весовой штрихкод</string>
+    <string name="bc_note">Разметка должна совпадать с шаблоном весового штрихкода в 1С, иначе касса прочитает не тот товар.</string>
+    <string name="bc_prefix">Префикс</string>
+    <string name="bc_plu">Цифр номера</string>
+    <string name="bc_weight">Цифр массы</string>
+    <string name="bc_ok">Шаблон: %1$s\nПример (номер 55, масса 1234 г):\n%2$s</string>
+    <string name="bc_bad">Разметка даёт %1$d цифр вместо 12.\nШтрихкод собран не будет — поправьте разрядность.</string>
 </resources>

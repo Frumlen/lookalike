@@ -60,6 +60,73 @@
             style="@style/Field"
             android:inputType="number" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="22dp"
+            android:paddingBottom="2dp"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="@color/text"
+            android:text="@string/bc_title" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="4dp"
+            android:textSize="12sp"
+            android:textColor="@color/muted"
+            android:text="@string/bc_note" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView style="@style/FieldLabel" android:text="@string/bc_prefix" />
+                <EditText android:id="@+id/bcPrefix" style="@style/Field" android:inputType="number" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:orientation="vertical">
+
+                <TextView style="@style/FieldLabel" android:text="@string/bc_plu" />
+                <EditText android:id="@+id/bcPlu" style="@style/Field" android:inputType="number" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:orientation="vertical">
+
+                <TextView style="@style/FieldLabel" android:text="@string/bc_weight" />
+                <EditText android:id="@+id/bcWeight" style="@style/Field" android:inputType="number" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/bcPreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/card"
+            android:padding="14dp"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textColor="@color/text" />
+
         <Button
             android:id="@+id/toggle"
             style="@style/Btn.Primary"
