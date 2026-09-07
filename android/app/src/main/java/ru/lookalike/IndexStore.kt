@@ -229,6 +229,15 @@ class IndexStore(private val context: Context) {
         if (thumb.startsWith("f/")) File(thumbDir, thumb.substring(2)).delete()
     }
 
+    /** Стереть всё. Обратно вернуть нельзя — только загрузить базу из файла. */
+    fun clear() {
+        thumbDir.listFiles()?.forEach { it.delete() }
+        vectors.clear()
+        labels.clear()
+        thumbs.clear()
+        save()
+    }
+
     fun rename(from: String, to: String) {
         for (n in labels.indices) if (labels[n] == from) labels[n] = to
         save()

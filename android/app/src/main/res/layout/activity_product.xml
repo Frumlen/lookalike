@@ -9,9 +9,9 @@
         android:id="@+id/name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="14dp"
-        android:paddingTop="14dp"
-        android:textSize="17sp"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="18dp"
+        android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@color/text" />
 
@@ -19,16 +19,17 @@
         android:id="@+id/summary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="14dp"
-        android:paddingBottom="10dp"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="3dp"
         android:textSize="13sp"
         android:textColor="@color/muted" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="14dp"
-        android:paddingBottom="8dp"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="12dp"
         android:textSize="12sp"
         android:textColor="@color/muted"
         android:text="@string/tap_to_delete" />
@@ -36,19 +37,21 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:clipToPadding="false">
 
         <GridLayout
             android:id="@+id/grid"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="6dp" />
+            android:padding="8dp" />
     </ScrollView>
 
     <Button
         android:id="@+id/rename"
+        style="@style/Btn.Ghost"
         android:layout_width="match_parent"
         android:layout_height="52dp"
-        android:layout_margin="12dp"
+        android:layout_margin="14dp"
         android:text="@string/rename" />
 </LinearLayout>

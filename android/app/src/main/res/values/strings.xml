@@ -53,4 +53,13 @@
     <string name="no_thumb">без\nкартинки</string>
     <string name="shot_desc">Эталонный снимок</string>
     <string name="hold_for_menu">Удерживайте товар для удаления</string>
+
+    <string name="next">Далее</string>
+    <string name="wipe">Очистить базу</string>
+    <string name="wipe_empty">База и так пуста</string>
+    <string name="wipe_first">Будут удалены все товары: %1$d наименований, %2$d снимков.</string>
+    <string name="wipe_sure_title">Вы уверены?</string>
+    <string name="wipe_sure">Вы действительно хотите удалить все товары?\n\nПосле этого все ранее накопленные данные по распознаванию будут безвозвратно утеряны.</string>
+    <string name="wipe_do">Удалить всё</string>
+    <string name="wipe_done">База очищена</string>
 </resources>

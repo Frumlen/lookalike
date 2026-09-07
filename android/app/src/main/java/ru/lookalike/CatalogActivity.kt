@@ -28,6 +28,7 @@ class CatalogActivity : AppCompatActivity() {
         setContentView(ui.root)
         ui.export.setOnClickListener { shareBase() }
         ui.loadBase.setOnClickListener { pickFile.launch(arrayOf("application/zip", "*/*")) }
+        ui.wipe.setOnClickListener { askWipe() }
     }
 
     override fun onResume() {
@@ -118,6 +119,37 @@ class CatalogActivity : AppCompatActivity() {
                 )
             }
         }.start()
+    }
+
+    /**
+     * Очистка базы. Спрашиваем дважды: действие необратимое, а кнопка
+     * находится рядом с обычными.
+     */
+    private fun askWipe() {
+        if (store.size == 0) {
+            Toast.makeText(this, R.string.wipe_empty, Toast.LENGTH_SHORT).show()
+            return
+        }
+        val products = store.catalog().size
+        AlertDialog.Builder(this)
+            .setTitle(R.string.wipe)
+            .setMessage(getString(R.string.wipe_first, products, store.size))
+            .setPositiveButton(R.string.next) { _, _ -> confirmWipe() }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun confirmWipe() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.wipe_sure_title)
+            .setMessage(R.string.wipe_sure)
+            .setPositiveButton(R.string.wipe_do) { _, _ ->
+                store.clear()
+                refresh()
+                Toast.makeText(this, R.string.wipe_done, Toast.LENGTH_LONG).show()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     private val pickFile = registerForActivityResult(

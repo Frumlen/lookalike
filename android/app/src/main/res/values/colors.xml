@@ -1,8 +1,19 @@
 <resources>
-    <color name="bg">#F5F6F8</color>
-    <color name="text">#1A1D21</color>
-    <color name="muted">#7A828C</color>
-    <color name="accent">#3B6FD4</color>
-    <color name="top_row">#EAF3E9</color>
-    <color name="warn">#C2662D</color>
+    <!-- Тёмная основа: под камерой она смотрится естественнее светлой,
+         а яркая кнопка на ней читается с одного взгляда. -->
+    <color name="bg">#0E0F13</color>
+    <color name="surface">#191B22</color>
+    <color name="surface_high">#242731</color>
+    <color name="stroke">#2E323D</color>
+
+    <color name="text">#FFFFFF</color>
+    <color name="muted">#8A909B</color>
+
+    <!-- Акцент собран из трёх цветов в градиенте кнопки -->
+    <color name="accent">#E1306C</color>
+    <color name="accent_soft">#33E1306C</color>
+    <color name="success">#2ECC71</color>
+    <color name="warn">#F5A623</color>
+    <color name="danger">#FF4D4F</color>
+    <color name="top_row">#1F2A22</color>
 </resources>

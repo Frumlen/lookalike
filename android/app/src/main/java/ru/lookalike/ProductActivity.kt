@@ -37,6 +37,7 @@ class ProductActivity : AppCompatActivity() {
         ui.grid.columnCount = 3
         shots.forEach { index ->
             val cell = layoutInflater.inflate(R.layout.item_shot, ui.grid, false)
+            cell.clipToOutline = true          // скругляет картинку по фону ячейки
             val image = cell.findViewById<ImageView>(R.id.shot)
             val bitmap = store.thumbAt(index)
             if (bitmap != null) image.setImageBitmap(bitmap)
