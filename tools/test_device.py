@@ -43,7 +43,7 @@ def frame(command, init=0x0000):
 
 def check_http(host, port, timeout):
     print(f'HTTP  http://{host}:{port}')
-    ok = True
+    ok, notes = True, []
     for path in ('/', '/weight', '/product'):
         url = f'http://{host}:{port}{path}'
         started = time.perf_counter()
@@ -54,30 +54,64 @@ def check_http(host, port, timeout):
             data = json.loads(raw)
             print(f'  {path:<9} {spent:>5.0f} мс  {json.dumps(data, ensure_ascii=False)}')
             if path == '/':
-                describe(data)
+                notes = describe(data)
         except (urllib.error.URLError, socket.timeout, OSError) as exc:
             print(f'  {path:<9} НЕ ОТВЕТИЛ: {exc}')
             ok = False
         except json.JSONDecodeError:
             print(f'  {path:<9} ответ не разобран: {raw[:120]}')
             ok = False
-    return ok
+    return ok, notes
+
+
+def ean13_ok(code):
+    """Проверка контрольной цифры EAN-13."""
+    if len(code) != 13 or not code.isdigit():
+        return False
+    total = sum((d if i % 2 == 0 else d * 3)
+                for i, d in enumerate(int(c) for c in code[:12]))
+    return (10 - total % 10) % 10 == int(code[12])
 
 
 def describe(data):
+    """Разбор ответа плюс проверки, из-за которых касса может не найти товар."""
     weight = data.get('weight_g')
-    code = data.get('code') or '—'
     name = data.get('name') or '—'
+    plu = data.get('plu') or ''
+    barcode = data.get('weight_barcode') or ''
     age = data.get('age_ms')
+    notes = []
 
     if weight is None:
         print('      вес: нет данных — на устройстве ещё не запрашивали массу')
+        notes.append('вес не получен')
     else:
         stable = 'устоялась' if data.get('stable') else 'ещё скачет'
         print(f'      вес: {weight} г ({stable})')
-    print(f'      товар: {name}  [{code}]')
+        if not data.get('stable'):
+            notes.append('масса не устоялась')
+
+    print(f'      товар: {name}')
+
+    if not plu:
+        print('      номер на весах: НЕ ЗАДАН — касса товар не найдёт')
+        notes.append('нет номера на весах')
+    else:
+        print(f'      номер на весах: {plu}')
+
+    if barcode:
+        mark = 'верный' if ean13_ok(barcode) else 'НЕВЕРНАЯ контрольная цифра'
+        print(f'      весовой штрихкод: {barcode}  ({mark})')
+        if not ean13_ok(barcode):
+            notes.append('штрихкод не проходит проверку')
+    elif plu:
+        print('      весовой штрихкод: пуст — разметка не даёт 13 цифр')
+        notes.append('разметка штрихкода неверна')
+
     if isinstance(age, int) and age > 60000:
-        print(f'      ! данные старые, обновлялись {age // 1000} с назад')
+        print(f'      ! данные обновлялись {age // 1000} с назад')
+
+    return notes
 
 
 # ----------------------------------------------------- эмуляция весов
@@ -149,16 +183,25 @@ def main():
     args = parser.parse_args()
 
     print(f'проверяю {args.host}\n')
-    http_ok = check_http(args.host, args.http, args.timeout)
+    http_ok, notes = check_http(args.host, args.http, args.timeout)
     scale_ok = check_scale(args.host, args.scale, args.timeout)
 
-    print()
+    print('\n' + '─' * 52)
     print(f'  HTTP (вес и штрихкод):  {"работает" if http_ok else "НЕ ОТВЕЧАЕТ"}')
     print(f'  весы (только вес):      {"работает" if scale_ok else "НЕ ОТВЕЧАЕТ"}')
+
     if not (http_ok or scale_ok):
-        print('\n  проверьте: приложение открыто, сервер запущен на экране «Для 1С»,')
+        print('\n  проверьте: приложение открыто, сервер запущен в «Настройки → Касса»,')
         print('  устройство в той же сети, порты совпадают')
-    return 0 if (http_ok or scale_ok) else 1
+        return 1
+
+    if notes:
+        print('\n  до передачи в 1С осталось:')
+        for note in notes:
+            print(f'    — {note}')
+    elif http_ok:
+        print('\n  всё готово: 1С получит и вес, и штрихкод')
+    return 0
 
 
 if __name__ == '__main__':
