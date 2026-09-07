@@ -87,6 +87,8 @@
     <string name="srv_start">Запустить</string>
     <string name="srv_stop">Остановить</string>
     <string name="srv_address">Адрес этого устройства: %1$s</string>
+    <string name="srv_no_wifi">Нет адреса в локальной сети.\n\nВключите Wi-Fi и подключитесь к той же сети, что и касса. Через мобильный интернет 1С до устройства не достучится.</string>
+    <string name="srv_other_ifaces">Другие интерфейсы (для 1С не годятся):</string>
     <string name="srv_http_port">Порт HTTP (вес + штрихкод)</string>
     <string name="srv_scale_port">Порт весов (только вес)</string>
     <string name="srv_urls">http://%1$s:%2$d/         вес и товар\nhttp://%1$s:%2$d/weight   только вес\nhttp://%1$s:%2$d/product  только товар\n\n%3$s:%4$d — весы Масса-К, Протокол 100</string>

@@ -6,6 +6,7 @@ import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.net.ServerSocket
 import java.net.Socket
+import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
 
@@ -34,19 +35,37 @@ object State {
     }
 }
 
-/** Адрес устройства в локальной сети — его вписывают в настройках 1С. */
-fun localIp(): String {
+/** Один адрес устройства: имя интерфейса и IPv4. */
+data class NetAddress(val iface: String, val ip: String) {
+    /** Wi-Fi и Ethernet годятся, мобильный интернет — нет: касса до него не достучится. */
+    val local: Boolean
+        get() = iface.startsWith("wlan") || iface.startsWith("eth") || iface.startsWith("ap")
+}
+
+/** Все адреса устройства, начиная с пригодных для локальной сети. */
+fun localAddresses(): List<NetAddress> {
+    val found = ArrayList<NetAddress>()
     try {
         for (ni in NetworkInterface.getNetworkInterfaces()) {
             if (ni.isLoopback || !ni.isUp) continue
             for (addr in ni.inetAddresses) {
-                if (addr is Inet4Address) return addr.hostAddress ?: ""
+                if (addr is Inet4Address) {
+                    found.add(NetAddress(ni.name, addr.hostAddress ?: ""))
+                }
             }
         }
     } catch (_: Exception) {
     }
-    return ""
+    return found.sortedByDescending { it.local }
 }
+
+/**
+ * Адрес устройства в локальной сети — его вписывают в настройках 1С.
+ *
+ * Именно локальной: если телефон сидит в мобильном интернете, его адрес
+ * вида 10.x принадлежит сети оператора, и касса до него не достучится.
+ */
+fun localIp(): String = localAddresses().firstOrNull { it.local }?.ip ?: ""
 
 /**
  * Два входа для внешних систем, работают одновременно.
@@ -128,10 +147,10 @@ class LocalServer(
 
         val body = when (path) {
             "/weight" -> """{"weight_g":${num(now.weightGrams)},"stable":${now.stable}}"""
-            "/product" -> """{"code":${str(now.code)},"name":${str(now.name)},"score":${"%.4f".format(now.score)}}"""
+            "/product" -> """{"code":${str(now.code)},"name":${str(now.name)},"score":${dec(now.score)}}"""
             else -> """{"weight_g":${num(now.weightGrams)},"stable":${now.stable},""" +
                 """"code":${str(now.code)},"name":${str(now.name)},""" +
-                """"score":${"%.4f".format(now.score)},"age_ms":${System.currentTimeMillis() - now.at}}"""
+                """"score":${dec(now.score)},"age_ms":${System.currentTimeMillis() - now.at}}"""
         }
         val bytes = body.toByteArray(Charsets.UTF_8)
         socket.getOutputStream().apply {
@@ -146,7 +165,14 @@ class LocalServer(
         }
     }
 
-    private fun num(value: Double?) = if (value == null) "null" else "%.0f".format(value)
+    /**
+     * Числа для JSON форматируем в английской локали. На русской настройке
+     * телефона дробный разделитель — запятая, и JSON получается битым.
+     */
+    private fun num(value: Double?) =
+        if (value == null) "null" else String.format(Locale.US, "%.0f", value)
+
+    private fun dec(value: Float) = String.format(Locale.US, "%.4f", value)
 
     private fun str(value: String): String =
         "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""

@@ -31,12 +31,12 @@ class IntegrationActivity : AppCompatActivity() {
         refresh()
     }
 
-    private val httpPort get() = prefs.getInt("http", 8099)
+    private val httpPort get() = prefs.getInt("http", 8090)
     private val scalePort get() = prefs.getInt("scale", 5001)
 
     private fun savePorts() {
         prefs.edit()
-            .putInt("http", ui.httpPort.text.toString().toIntOrNull() ?: 8099)
+            .putInt("http", ui.httpPort.text.toString().toIntOrNull() ?: 8090)
             .putInt("scale", ui.scalePort.text.toString().toIntOrNull() ?: 5001)
             .apply()
     }
@@ -61,11 +61,29 @@ class IntegrationActivity : AppCompatActivity() {
     }
 
     private fun refresh() {
-        val ip = localIp().ifBlank { "—" }
+        val addresses = localAddresses()
+        val wifi = addresses.firstOrNull { it.local }
+        val ip = wifi?.ip ?: "—"
         val on = Servers.running
+
         ui.toggle.setText(if (on) R.string.srv_stop else R.string.srv_start)
         ui.state.text = getString(if (on) R.string.srv_on else R.string.srv_off)
-        ui.address.text = getString(R.string.srv_address, ip)
+
+        ui.address.text = buildString {
+            if (wifi == null) {
+                // Мобильный интернет не годится: касса до такого адреса не достучится
+                append(getString(R.string.srv_no_wifi))
+            } else {
+                append(getString(R.string.srv_address, wifi.ip))
+            }
+            val others = addresses.filterNot { it == wifi }
+            if (others.isNotEmpty()) {
+                append("\n\n")
+                append(getString(R.string.srv_other_ifaces))
+                others.forEach { append("\n  ${it.iface}: ${it.ip}") }
+            }
+        }
+
         ui.hint.text = getString(R.string.srv_urls, ip, httpPort, ip, scalePort)
         ui.httpPort.isEnabled = !on
         ui.scalePort.isEnabled = !on
