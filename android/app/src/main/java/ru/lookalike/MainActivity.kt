@@ -62,8 +62,7 @@ class MainActivity : AppCompatActivity() {
         ui.doneAdding.setOnClickListener { finishAdding() }
         ui.newProduct.setOnClickListener { askProductName() }
         ui.catalog.setOnClickListener { open(CatalogActivity::class.java) }
-        ui.scale.setOnClickListener { open(ScaleActivity::class.java) }
-        ui.integration.setOnClickListener { open(IntegrationActivity::class.java) }
+        ui.settings.setOnClickListener { open(SettingsActivity::class.java) }
 
         worker.execute {
             val ms = measureTimeMillis {
@@ -110,20 +109,18 @@ class MainActivity : AppCompatActivity() {
         }
         ui.getWeight.isEnabled = scaleSettings.configured
 
-        ui.chosen.text = if (now.name.isBlank()) {
-            getString(R.string.chosen_none)
-        } else buildString {
-            append(getString(R.string.chosen_name, now.name, now.score * 100))
-            append('\n')
-            when {
-                now.plu.isBlank() ->
-                    // Без номера касса товар не найдёт — говорим прямо
-                    append(getString(R.string.chosen_no_plu))
-                else -> {
-                    val code = barcodes.build(now.plu, (grams ?: 0.0).toInt())
-                    append(getString(R.string.chosen_plu, now.plu))
-                    if (code.isNotBlank()) append("  ").append(code)
-                }
+        if (now.name.isBlank()) {
+            ui.chosenName.text = getString(R.string.chosen_none)
+            ui.chosenCode.text = ""
+        } else {
+            ui.chosenName.text = getString(R.string.chosen_name, now.name, now.score * 100)
+            ui.chosenCode.text = if (now.plu.isBlank()) {
+                // Без номера касса товар не найдёт — говорим прямо
+                getString(R.string.chosen_no_plu)
+            } else {
+                val code = barcodes.build(now.plu, (grams ?: 0.0).toInt())
+                getString(R.string.chosen_plu, now.plu) +
+                    if (code.isNotBlank()) "   $code" else ""
             }
         }
 

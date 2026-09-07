@@ -5,72 +5,126 @@
     android:orientation="vertical"
     android:background="@color/bg">
 
+    <!-- Верхняя полоса: рабочий экран остаётся рабочим, всё прочее сюда -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="@color/text"
+            android:text="@string/app_name" />
+
+        <TextView
+            android:id="@+id/catalog"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:textSize="15sp"
+            android:textColor="@color/accent"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:text="@string/catalog" />
+
+        <TextView
+            android:id="@+id/settings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:layout_marginStart="6dp"
+            android:textSize="15sp"
+            android:textColor="@color/accent"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:text="@string/settings" />
+    </LinearLayout>
+
     <androidx.camera.view.PreviewView
         android:id="@+id/viewFinder"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <!-- Что уйдёт в 1С: вес и выбранный товар -->
+    <!-- Одна карточка: ровно то, что уйдёт в чек -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:background="@drawable/card"
         android:layout_marginHorizontal="12dp"
         android:layout_marginTop="10dp"
-        android:padding="14dp"
-        android:gravity="center_vertical">
+        android:padding="16dp">
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:gravity="bottom">
 
             <TextView
                 android:id="@+id/weight"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="30sp"
+                android:textSize="34sp"
                 android:textStyle="bold"
                 android:textColor="@color/text"
                 android:text="@string/weight_zero" />
 
             <TextView
                 android:id="@+id/weightNote"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:paddingBottom="6dp"
                 android:textSize="12sp"
                 android:textColor="@color/muted" />
+
+            <Button
+                android:id="@+id/getWeight"
+                style="@style/Btn.Ghost"
+                android:layout_width="wrap_content"
+                android:layout_height="42dp"
+                android:paddingHorizontal="16dp"
+                android:textSize="14sp"
+                android:text="@string/weight_get" />
         </LinearLayout>
 
-        <Button
-            android:id="@+id/getWeight"
-            style="@style/Btn.Ghost"
-            android:layout_width="wrap_content"
-            android:layout_height="46dp"
-            android:paddingHorizontal="18dp"
-            android:text="@string/weight_get" />
-    </LinearLayout>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="12dp"
+            android:background="@color/stroke" />
 
-    <TextView
-        android:id="@+id/chosen"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/card"
-        android:layout_marginHorizontal="12dp"
-        android:layout_marginTop="8dp"
-        android:padding="14dp"
-        android:textSize="15sp"
-        android:textColor="@color/text" />
+        <TextView
+            android:id="@+id/chosenName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textColor="@color/text" />
+
+        <TextView
+            android:id="@+id/chosenCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="3dp"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textColor="@color/muted" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="16dp"
-        android:paddingVertical="8dp"
+        android:paddingVertical="7dp"
         android:textSize="12sp"
         android:textColor="@color/muted"
         android:gravity="center" />
@@ -93,75 +147,37 @@
             android:id="@+id/shoot"
             style="@style/Btn.Primary"
             android:layout_width="0dp"
-            android:layout_height="60dp"
+            android:layout_height="62dp"
             android:layout_weight="1"
             android:text="@string/shoot" />
+
+        <Button
+            android:id="@+id/newProduct"
+            style="@style/Btn.Ghost"
+            android:layout_width="wrap_content"
+            android:layout_height="62dp"
+            android:layout_marginStart="10dp"
+            android:paddingHorizontal="20dp"
+            android:textSize="15sp"
+            android:text="@string/new_short" />
 
         <Button
             android:id="@+id/doneAdding"
             style="@style/Btn.Ghost"
             android:layout_width="wrap_content"
-            android:layout_height="60dp"
+            android:layout_height="62dp"
             android:layout_marginStart="10dp"
-            android:paddingHorizontal="18dp"
+            android:paddingHorizontal="20dp"
             android:visibility="gone"
             android:text="@string/done" />
     </LinearLayout>
 
-    <!-- Состояние связи: видно, не выходя с рабочего экрана -->
     <TextView
         android:id="@+id/links"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="10dp"
+        android:padding="14dp"
         android:textSize="12sp"
         android:gravity="center"
         android:textColor="@color/muted" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp">
-
-        <Button
-            android:id="@+id/newProduct"
-            style="@style/Btn.Ghost"
-            android:layout_width="0dp"
-            android:layout_height="44dp"
-            android:layout_weight="1"
-            android:textSize="13sp"
-            android:text="@string/new_product" />
-
-        <Button
-            android:id="@+id/catalog"
-            style="@style/Btn.Ghost"
-            android:layout_width="0dp"
-            android:layout_height="44dp"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:textSize="13sp"
-            android:text="@string/catalog" />
-
-        <Button
-            android:id="@+id/scale"
-            style="@style/Btn.Ghost"
-            android:layout_width="0dp"
-            android:layout_height="44dp"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:textSize="13sp"
-            android:text="@string/scale" />
-
-        <Button
-            android:id="@+id/integration"
-            style="@style/Btn.Ghost"
-            android:layout_width="0dp"
-            android:layout_height="44dp"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:textSize="13sp"
-            android:text="@string/integration" />
-    </LinearLayout>
 </LinearLayout>

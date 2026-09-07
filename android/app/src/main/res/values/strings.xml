@@ -130,4 +130,21 @@
     <string name="bc_weight">Цифр массы</string>
     <string name="bc_ok">Шаблон: %1$s\nПример (номер 55, масса 1234 г):\n%2$s</string>
     <string name="bc_bad">Разметка даёт %1$d цифр вместо 12.\nШтрихкод собран не будет — поправьте разрядность.</string>
+
+    <string name="settings">Настройки</string>
+    <string name="new_short">+ товар</string>
+
+    <string name="set_scale">Весы</string>
+    <string name="set_scale_note">Откуда приложение берёт массу</string>
+    <string name="set_scale_on">Подключены: %1$s:%2$d</string>
+    <string name="set_scale_off">Не настроены — вес будет 0</string>
+
+    <string name="set_server">Касса (1С)</string>
+    <string name="set_server_note">Куда 1С обращается за весом и штрихкодом</string>
+    <string name="set_server_on">Работает, адрес %1$s</string>
+    <string name="set_server_off">Остановлено — 1С данные не получит</string>
+    <string name="set_bc_ok">Штрихкод: %1$s</string>
+    <string name="set_bc_bad">Разметка штрихкода неверна</string>
+
+    <string name="set_help">Порядок такой: сначала «Весы» — оттуда берётся масса. Потом «Касса» — там включается сервер, к которому обращается 1С, и задаётся разметка весового штрихкода.\n\nРазметка обязана совпадать с шаблоном весового штрихкода в 1С, иначе касса прочитает не тот товар.</string>
 </resources>

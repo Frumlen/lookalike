@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="4dp"
+        android:paddingBottom="16dp"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/text"
+        android:text="@string/settings" />
+
+    <LinearLayout
+        android:id="@+id/scaleRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/card_click"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textColor="@color/text"
+            android:text="@string/set_scale" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="2dp"
+            android:textSize="12sp"
+            android:textColor="@color/muted"
+            android:text="@string/set_scale_note" />
+
+        <TextView
+            android:id="@+id/scaleState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="8dp"
+            android:textSize="13sp"
+            android:textColor="@color/accent" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/serverRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/card_click"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textColor="@color/text"
+            android:text="@string/set_server" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="2dp"
+            android:textSize="12sp"
+            android:textColor="@color/muted"
+            android:text="@string/set_server_note" />
+
+        <TextView
+            android:id="@+id/serverState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="8dp"
+            android:textSize="13sp"
+            android:textColor="@color/accent" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/card"
+        android:padding="16dp"
+        android:textSize="12sp"
+        android:lineSpacingExtra="3dp"
+        android:textColor="@color/muted"
+        android:text="@string/set_help" />
+</LinearLayout>
