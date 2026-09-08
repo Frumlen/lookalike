@@ -235,7 +235,8 @@ class ScaleClient(
  */
 object ScaleFinder {
 
-    data class Found(val ip: String, val what: String)
+    /** Найденный узел. `scale` — ответил как весы, остальные просто живы. */
+    data class Found(val ip: String, val what: String, val scale: Boolean)
 
     fun scan(
         selfIp: String,
@@ -262,7 +263,13 @@ object ScaleFinder {
         pool.awaitTermination(2, java.util.concurrent.TimeUnit.MINUTES)
     }
 
-    /** Быстрая проверка одного адреса: коротко стучимся и спрашиваем массу. */
+    /**
+     * Проверка одного адреса: коротко стучимся и спрашиваем массу.
+     *
+     * Отказ в соединении — это тоже находка: значит устройство по адресу
+     * есть, просто не слушает наш порт. Без этого при пустом результате
+     * непонятно, работает ли поиск вообще.
+     */
     private fun probe(ip: String, port: Int): Found? {
         try {
             java.net.Socket().use { socket ->
@@ -273,14 +280,21 @@ object ScaleFinder {
                     flush()
                 }
                 val head = ByteArray(5)
-                if (socket.getInputStream().read(head) < 5) return Found(ip, "порт открыт, молчит")
+                if (socket.getInputStream().read(head) < 5) {
+                    return Found(ip, "порт открыт, но молчит", false)
+                }
                 if (head[0] != 0xF8.toByte() || head[1] != 0x55.toByte() ||
                     head[2] != 0xCE.toByte()
-                ) return Found(ip, "порт открыт, но это не Масса-К")
-                return Found(ip, "весы Масса-К")
+                ) return Found(ip, "порт открыт, но это не Масса-К", false)
+                return Found(ip, "весы Масса-К", true)
             }
-        } catch (_: Exception) {
-            return null
+        } catch (exc: Exception) {
+            val text = exc.message.orEmpty()
+            return if ("ECONNREFUSED" in text || "Connection refused" in text) {
+                Found(ip, "устройство есть, порт $port закрыт", false)
+            } else {
+                null                                    // узла нет либо не ответил
+            }
         }
     }
 

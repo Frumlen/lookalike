@@ -76,20 +76,29 @@ class ScaleActivity : AppCompatActivity() {
         ui.find.setText(R.string.find)
         ui.weigh.isEnabled = true
         ui.params.isEnabled = true
-        if (found.isEmpty()) {
-            ui.result.text = getString(R.string.find_none, settings.port)
-        }
+        showFound(finished = true)
         ui.log.text = ""
     }
 
-    private fun showFound() {
-        val list = synchronized(found) { found.toList() }
+    private fun showFound(finished: Boolean = false) {
+        val list = synchronized(found) { found.sortedByDescending { it.scale } }
+        val scales = list.count { it.scale }
+
         ui.result.text = buildString {
-            append(getString(R.string.find_found, list.size))
+            when {
+                scales > 0 -> append(getString(R.string.find_scales, scales))
+                list.isNotEmpty() && finished ->
+                    // Сеть просканирована, устройства есть — просто не весы.
+                    // Это другой случай, чем «сеть недоступна»
+                    append(getString(R.string.find_only_others, list.size, settings.port))
+                finished -> append(getString(R.string.find_none, settings.port))
+                else -> append(getString(R.string.find_found, list.size))
+            }
             list.forEach { append("\n\n").append(it.ip).append("\n").append(it.what) }
         }
+
         // Первый похожий на весы адрес подставляем сразу — обычно он и нужен
-        list.firstOrNull { it.what.contains("Масса-К") }?.let { ui.host.setText(it.ip) }
+        list.firstOrNull { it.scale }?.let { ui.host.setText(it.ip) }
     }
 
     private fun save() {
