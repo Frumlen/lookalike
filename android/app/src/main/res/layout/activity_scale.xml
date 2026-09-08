@@ -63,6 +63,14 @@
             android:layout_marginTop="10dp"
             android:text="@string/scale_params" />
 
+        <Button
+            android:id="@+id/find"
+            style="@style/Btn.Ghost"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/find" />
+
         <TextView
             android:id="@+id/result"
             android:layout_width="match_parent"

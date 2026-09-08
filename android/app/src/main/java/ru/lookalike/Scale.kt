@@ -156,6 +156,25 @@ class ScaleClient(
     private val timeoutMs: Int = 3000
 ) {
 
+    /** Понятный текст вместо имени класса исключения. */
+    private fun explain(exc: Exception): String {
+        val text = exc.message.orEmpty()
+        return when {
+            "EHOSTUNREACH" in text || "No route to host" in text ->
+                "по адресу $host никто не отвечает. Устройства с таким адресом " +
+                    "нет в сети: проверьте, включены ли весы и верен ли адрес"
+            "ECONNREFUSED" in text || "Connection refused" in text ->
+                "устройство $host есть, но порт $port закрыт. Проверьте номер порта " +
+                    "и включён ли обмен по сети в настройках весов"
+            "ETIMEDOUT" in text || exc is java.net.SocketTimeoutException ->
+                "$host не ответил за $timeoutMs мс. Возможно, весы в другой сети " +
+                    "или отвечает не то устройство"
+            "ENETUNREACH" in text ->
+                "сеть недоступна — проверьте Wi-Fi на телефоне"
+            else -> "${exc.javaClass.simpleName}: ${text.ifBlank { "нет ответа" }}"
+        }
+    }
+
     fun ask(command: Int, crcInit: Int? = null): ScaleResult {
         val inits = crcInit?.let { intArrayOf(it) } ?: ScaleProtocol.CRC_INITS
         var last: ScaleResult? = null
@@ -201,12 +220,73 @@ class ScaleClient(
             }
         } catch (exc: Exception) {
             return ScaleResult(
-                null, request, ByteArray(0), crcInit,
-                "${exc.javaClass.simpleName}: ${exc.message ?: "нет ответа"}",
+                null, request, ByteArray(0), crcInit, explain(exc),
                 System.currentTimeMillis() - started
             )
         }
     }
+}
+
+/**
+ * Поиск весов в своей подсети.
+ *
+ * Адрес весов обычно неизвестен, а гадать дорого: пробегаем все адреса
+ * и спрашиваем массу. Кто ответил кадром Масса-К — тот и весы.
+ */
+object ScaleFinder {
+
+    data class Found(val ip: String, val what: String)
+
+    fun scan(
+        selfIp: String,
+        port: Int,
+        onFound: (Found) -> Unit,
+        onProgress: (Int, Int) -> Unit,
+        stop: () -> Boolean
+    ) {
+        val prefix = selfIp.substringBeforeLast('.', "")
+        if (prefix.isEmpty()) return
+        val own = selfIp.substringAfterLast('.').toIntOrNull() ?: -1
+
+        val pool = java.util.concurrent.Executors.newFixedThreadPool(THREADS)
+        val done = java.util.concurrent.atomic.AtomicInteger(0)
+        val total = 254
+
+        for (last in 1..254) {
+            pool.execute {
+                if (!stop() && last != own) probe("$prefix.$last", port)?.let(onFound)
+                onProgress(done.incrementAndGet(), total)
+            }
+        }
+        pool.shutdown()
+        pool.awaitTermination(2, java.util.concurrent.TimeUnit.MINUTES)
+    }
+
+    /** Быстрая проверка одного адреса: коротко стучимся и спрашиваем массу. */
+    private fun probe(ip: String, port: Int): Found? {
+        try {
+            java.net.Socket().use { socket ->
+                socket.connect(java.net.InetSocketAddress(ip, port), CONNECT_MS)
+                socket.soTimeout = READ_MS
+                socket.getOutputStream().apply {
+                    write(ScaleProtocol.request(ScaleProtocol.CMD_GET_MASSA, 0x0000))
+                    flush()
+                }
+                val head = ByteArray(5)
+                if (socket.getInputStream().read(head) < 5) return Found(ip, "порт открыт, молчит")
+                if (head[0] != 0xF8.toByte() || head[1] != 0x55.toByte() ||
+                    head[2] != 0xCE.toByte()
+                ) return Found(ip, "порт открыт, но это не Масса-К")
+                return Found(ip, "весы Масса-К")
+            }
+        } catch (_: Exception) {
+            return null
+        }
+    }
+
+    private const val THREADS = 48
+    private const val CONNECT_MS = 400
+    private const val READ_MS = 700
 }
 
 /** Настройки подключения к весам. */

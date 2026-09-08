@@ -23,6 +23,73 @@ class ScaleActivity : AppCompatActivity() {
 
         ui.weigh.setOnClickListener { run(ScaleProtocol.CMD_GET_MASSA) }
         ui.params.setOnClickListener { run(ScaleProtocol.CMD_GET_SCALE_PAR) }
+        ui.find.setOnClickListener { if (scanning) stopScan() else startScan() }
+    }
+
+    // ------------------------------------------------------ поиск весов
+
+    @Volatile
+    private var scanning = false
+    private val found = ArrayList<ScaleFinder.Found>()
+
+    /** Пробегает свою подсеть и ищет, кто отвечает как весы. */
+    private fun startScan() {
+        val self = localIp()
+        if (self.isBlank()) {
+            ui.result.text = getString(R.string.find_no_network)
+            return
+        }
+        save()
+        scanning = true
+        found.clear()
+        ui.find.setText(R.string.find_stop)
+        ui.weigh.isEnabled = false
+        ui.params.isEnabled = false
+        ui.result.text = getString(R.string.find_running, self.substringBeforeLast('.') + ".*")
+        ui.log.text = ""
+
+        worker.execute {
+            ScaleFinder.scan(
+                selfIp = self,
+                port = settings.port,
+                onFound = { item ->
+                    synchronized(found) { found.add(item) }
+                    runOnUiThread { showFound() }
+                },
+                onProgress = { done, total ->
+                    if (done % 16 == 0 || done == total) {
+                        runOnUiThread { ui.log.text = getString(R.string.find_progress, done, total) }
+                    }
+                },
+                stop = { !scanning }
+            )
+            runOnUiThread { finishScan() }
+        }
+    }
+
+    private fun stopScan() {
+        scanning = false
+    }
+
+    private fun finishScan() {
+        scanning = false
+        ui.find.setText(R.string.find)
+        ui.weigh.isEnabled = true
+        ui.params.isEnabled = true
+        if (found.isEmpty()) {
+            ui.result.text = getString(R.string.find_none, settings.port)
+        }
+        ui.log.text = ""
+    }
+
+    private fun showFound() {
+        val list = synchronized(found) { found.toList() }
+        ui.result.text = buildString {
+            append(getString(R.string.find_found, list.size))
+            list.forEach { append("\n\n").append(it.ip).append("\n").append(it.what) }
+        }
+        // Первый похожий на весы адрес подставляем сразу — обычно он и нужен
+        list.firstOrNull { it.what.contains("Масса-К") }?.let { ui.host.setText(it.ip) }
     }
 
     private fun save() {
